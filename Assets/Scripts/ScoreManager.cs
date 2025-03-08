@@ -1,63 +1,73 @@
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System.Collections.Generic;
 
 public class ScoreManager : MonoBehaviour
 {
-    public static ScoreManager Instance;
-
     [System.Serializable]
     public class PlayerData
     {
-        public GameObject player;
+        public GameObject playerObject;
         public GameObject goal;
+        public GameObject wall;
         public TextMeshProUGUI scoreText;
-        public int score = 10;
+        public int score;
     }
 
-    public List<PlayerData> players = new List<PlayerData>();
+    public List<PlayerData> players;
 
-    private void Awake()
+    public static ScoreManager Instance { get; private set; }
+
+    void Awake()
     {
         if (Instance == null)
-        {
             Instance = this;
-        }
         else
-        {
             Destroy(gameObject);
-        }
-    }
-
-    private void Start()
-    {
-        UpdateScoreUI();
     }
 
     public void PlayerScored(GameObject goal)
     {
-        foreach (PlayerData player in players)
+        foreach (var player in players)
         {
             if (player.goal == goal)
             {
                 player.score--;
-                if (player.score <= 0)
-                {
-                    player.score = 0;
-                    player.player.SetActive(false); 
-                    player.goal.SetActive(false);   
-                }
-                UpdateScoreUI();
-                return;
+                UpdateScoreUI(player);
+                CheckForElimination(player);
+                break;
             }
         }
     }
 
-    private void UpdateScoreUI()
+    private void UpdateScoreUI(PlayerData player)
     {
-        foreach (PlayerData player in players)
+        player.scoreText.text = player.score.ToString();
+    }
+
+    private void CheckForElimination(PlayerData player)
+    {
+        if (player.score <= 0)
         {
-            player.scoreText.text = player.score.ToString();
+            player.playerObject.SetActive(false);
+            player.goal.SetActive(false);
+            player.wall.SetActive(true);
+            CheckForWinner();
+        }
+    }
+
+    private void CheckForWinner()
+    {
+        int activePlayers = 0;
+        foreach (var player in players)
+        {
+            if (player.playerObject.activeSelf)
+                activePlayers++;
+        }
+
+        if (activePlayers == 1)
+        {
+            Debug.Log("ayuda por favor");
         }
     }
 }
